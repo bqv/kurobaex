@@ -765,6 +765,7 @@ Usually that means that you forgot to remove a space from the beginning or the e
     <string name="setting_js_captcha_cookies_description">By inputting your desktop browser captcha cookies, captcha solving may become easier</string>
     <string name="setting_load_last_opened_board_upon_app_start_title">Restore last visited catalog upon app start</string>
     <string name="setting_load_last_opened_thread_upon_app_start_title">Restore last visited thread upon app start</string>
+    <string name="setting_searx_instance">Searx Instance URL</string>
 
     <!-- Behavior post group -->
     <string name="settings_group_post">Post</string>

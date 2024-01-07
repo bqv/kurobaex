@@ -62,7 +62,7 @@ class ImageSearchControllerViewModel : BaseViewModel() {
         _searchInstances[imageSearchInstance.type] = imageSearchInstance
       }
 
-      _lastUsedSearchInstance.value = ImageSearchInstanceType.Yandex
+      _lastUsedSearchInstance.value = ImageSearchInstanceType.Searx
       searchQuery.value = ""
     }
   }

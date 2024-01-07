@@ -20,6 +20,7 @@ import com.github.k1rakishou.chan.ui.controller.settings.captcha.JsCaptchaCookie
 import com.github.k1rakishou.chan.ui.helper.AppSettingsUpdateAppRefreshHelper
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.showToast
 import com.github.k1rakishou.common.AndroidUtils
+import com.github.k1rakishou.prefs.StringSetting
 
 class BehaviourSettingsScreen(
   context: Context,
@@ -294,6 +295,15 @@ class BehaviourSettingsScreen(
 
             appSettingsUpdateAppRefreshHelper.settingsUpdated()
           }
+        )
+
+        group += InputSettingV2.createBuilder<String>(
+          context = context,
+          identifier = BehaviorScreen.GeneralGroup.SearxInstance,
+          topDescriptionIdFunc = { R.string.setting_searx_instance },
+          bottomDescriptionStringFunc = { ChanSettings.searxInstanceUrl.get() },
+          setting = ChanSettings.searxInstanceUrl,
+          inputType = DialogFactory.DialogInputType.String
         )
 
         group

@@ -3,6 +3,7 @@ package com.github.k1rakishou.chan.features.reply_image_search.instances
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.features.reply_image_search.ImageSearchInstance
 import com.github.k1rakishou.chan.features.reply_image_search.ImageSearchInstanceType
+import com.github.k1rakishou.ChanSettings
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
@@ -14,7 +15,7 @@ class SearxInstance : ImageSearchInstance(
     override val cookies: String? = null
 
     override suspend fun baseUrl(): HttpUrl {
-        return "https://searx.prvcy.eu".toHttpUrl()
+        return ChanSettings.searxInstanceUrl.get().toHttpUrl() // meh :/
     }
 
     override fun updateCookies(newCookies: String) {

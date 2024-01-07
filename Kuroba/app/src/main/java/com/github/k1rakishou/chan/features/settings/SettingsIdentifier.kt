@@ -436,6 +436,7 @@ sealed class BehaviorScreen(
     object CaptchaSetup : GeneralGroup("catpcha_setup")
     object JsCaptchaCookiesEditor : GeneralGroup("js_captcha_cookies_editor")
     object ClearPostHides : GeneralGroup("clear_post_hides")
+    object SearxInstance : RepliesGroup("searx_instance")
 
     companion object : IGroupIdentifier() {
       override fun screenIdentifier(): ScreenIdentifier = BehaviorScreen.screenIdentifier()

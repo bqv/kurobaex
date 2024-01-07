@@ -343,6 +343,7 @@ public class ChanSettings {
     public static StringSetting jsCaptchaCookies;
     public static BooleanSetting loadLastOpenedBoardUponAppStart;
     public static BooleanSetting loadLastOpenedThreadUponAppStart;
+    public static StringSetting searxInstanceUrl;
 
     // Reply
     public static BooleanSetting postPinThread;
@@ -585,6 +586,7 @@ public class ChanSettings {
             jsCaptchaCookies = new StringSetting(provider, "js_captcha_cookies", EMPTY_JSON);
             loadLastOpenedBoardUponAppStart = new BooleanSetting(provider, "load_last_opened_board_upon_app_start", true);
             loadLastOpenedThreadUponAppStart = new BooleanSetting(provider, "load_last_opened_thread_upon_app_start", true);
+            searxInstanceUrl = new StringSetting(provider, "searx_instance", "https://searx.prvcy.eu");
 
             // Reply
             postPinThread = new BooleanSetting(provider, "preference_pin_on_post", false);

@@ -7,5 +7,6 @@ enum class CommentParserType {
   FoolFuukaParser,
   TaimabaParser,
   VichanParser,
-  LynxchanParser
+  LynxchanParser,
+  YlilautaParser
 }

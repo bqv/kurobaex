@@ -16,7 +16,11 @@
  */
 package com.github.k1rakishou.chan.core.site
 
-import com.github.k1rakishou.chan.core.site.sites.*
+import com.github.k1rakishou.chan.core.site.sites.Chan370
+import com.github.k1rakishou.chan.core.site.sites.CompositeCatalogSite
+import com.github.k1rakishou.chan.core.site.sites.Diochan
+import com.github.k1rakishou.chan.core.site.sites.Sushichan
+import com.github.k1rakishou.chan.core.site.sites.ylilauta.Ylilauta
 import com.github.k1rakishou.chan.core.site.sites.wired7.Wired7
 import com.github.k1rakishou.chan.core.site.sites.chan4.Chan4
 import com.github.k1rakishou.chan.core.site.sites.chan420.Chan420
@@ -55,6 +59,7 @@ object SiteRegistry {
     siteClasses.addSiteToSiteClassesMap(Sushichan.SITE_NAME, Sushichan::class.java)
     siteClasses.addSiteToSiteClassesMap(Dvach.SITE_NAME, Dvach::class.java)
     siteClasses.addSiteToSiteClassesMap(Wired7.SITE_NAME, Wired7::class.java)
+    siteClasses.addSiteToSiteClassesMap(Ylilauta.SITE_NAME, Ylilauta::class.java)
     siteClasses.addSiteToSiteClassesMap(Kun8.SITE_NAME, Kun8::class.java)
     siteClasses.addSiteToSiteClassesMap(Chan420.SITE_NAME, Chan420::class.java)
     siteClasses.addSiteToSiteClassesMap(ArchivedMoe.SITE_NAME, ArchivedMoe::class.java)

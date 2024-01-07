@@ -299,12 +299,14 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-rx2:${versions.kotlin_coroutines_version}"
     implementation "io.coil-kt:coil:${versions.coil}"
     implementation "io.coil-kt:coil-compose:${versions.coil}"
+    implementation "io.coil-kt:coil-base:${versions.coil}"
     implementation "cafe.adriel.voyager:voyager-core:${versions.voyager}"
     implementation "cafe.adriel.voyager:voyager-navigator:${versions.voyager}"
     implementation "cafe.adriel.voyager:voyager-transitions:${versions.voyager}"
 
     implementation("ch.acra:acra-http:${versions.acra}")
     implementation("ch.acra:acra-core:${versions.acra}")
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:${versions.kotlin_coroutines_version}"
 
     // noinspection GradleDependency wants to upgrade to older version
     implementation "com.github.K1rakishou:Fuck-Storage-Access-Framework:${versions.fsaf}"
@@ -321,6 +323,14 @@ dependencies {
 
     implementation "com.airbnb.android:epoxy:${versions.epoxy}"
     ksp("com.airbnb.android:epoxy-processor:${versions.epoxy}")
+
+    implementation 'com.google.mlkit:translate:17.0.1'
+    implementation 'com.google.mlkit:language-id:17.0.4'
+    implementation 'com.google.mlkit:text-recognition:16.0.0'
+    implementation 'com.google.mlkit:text-recognition-chinese:16.0.0'
+    implementation 'com.google.mlkit:text-recognition-devanagari:16.0.0'
+    implementation 'com.google.mlkit:text-recognition-japanese:16.0.0'
+    implementation 'com.google.mlkit:text-recognition-korean:16.0.0'
 
     testImplementation "junit:junit:${versions.junit}"
     testImplementation "org.robolectric:robolectric:${versions.robolectric}"

@@ -22,6 +22,7 @@ import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.sp
 import com.github.k1rakishou.chan.utils.SpannableHelper
 import com.github.k1rakishou.common.AppConstants
+import com.github.k1rakishou.common.CommentParserConstants
 import com.github.k1rakishou.common.MurmurHashUtils
 import com.github.k1rakishou.common.StringUtils
 import com.github.k1rakishou.common.buildSpannableString
@@ -45,8 +46,26 @@ import com.github.k1rakishou.model.data.post.ChanPostHide
 import com.github.k1rakishou.model.data.post.ChanPostHttpIcon
 import com.github.k1rakishou.model.data.post.ChanPostImage
 import com.github.k1rakishou.model.util.ChanPostUtils
+import com.google.android.gms.tasks.Task
+import com.google.mlkit.common.model.DownloadConditions
+import com.google.mlkit.common.model.RemoteModelManager
+import com.google.mlkit.nl.languageid.IdentifiedLanguage
+import com.google.mlkit.nl.languageid.LanguageIdentification
+import com.google.mlkit.nl.languageid.LanguageIdentificationOptions
+import com.google.mlkit.nl.languageid.LanguageIdentifier
+import com.google.mlkit.nl.languageid.LanguageIdentifier.UNDETERMINED_LANGUAGE_TAG
+import com.google.mlkit.nl.translate.TranslateLanguage
+import com.google.mlkit.nl.translate.TranslateRemoteModel
+import com.google.mlkit.nl.translate.Translation
+import com.google.mlkit.nl.translate.Translator
+import com.google.mlkit.nl.translate.TranslatorOptions
+import kotlin.math.nextTowards
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.tasks.asDeferred
+import kotlinx.coroutines.tasks.await
 import java.util.*
 
 data class PostCellData(
@@ -87,8 +106,11 @@ data class PostCellData(
   val isSplitLayout: Boolean
 ) {
   var postCellCallback: PostCellInterface.PostCellCallback? = null
+  var postLanguageSelected: Int? = null
 
   private var postTitleStubPrecalculated: CharSequence? = null
+  private var postLanguagesPrecalculated: SortedMap<Locale?, Float>? = null
+  private var postTranslationsPrecalculated: MutableMap<Locale, String>? = null
   private var postTitlePrecalculated: CharSequence? = null
   private var postFileInfoPrecalculated: MutableMap<ChanPostImage, SpannableString>? = null
   private var postFileInfoMapForThumbnailWrapperPrecalculated: MutableMap<ChanPostImage, SpannableString>? = null
@@ -190,6 +212,11 @@ data class PostCellData(
     get() = _detailsSizePx.value()
   val fontSizePx: Int
     get() = _fontSizePx.value()
+  val postLanguages: SortedMap<Locale?, Float>
+    get() = postLanguagesPrecalculated ?: mutableMapOf<Locale?, Float>()
+      .toSortedMap(compareBy { 0 })
+  val postTranslations: MutableMap<Locale, String>
+    get() = postTranslationsPrecalculated ?: mutableMapOf()
   val postTitle: CharSequence
     get() = _postTitle.value()
   val postTitleStub: CharSequence
@@ -205,9 +232,74 @@ data class PostCellData(
   val repliesToThisPostText
     get() = _repliesToThisPostText.value()
 
+  private val languageIdentifier: LanguageIdentifier = LanguageIdentification.getClient(
+    LanguageIdentificationOptions.Builder()
+      .setConfidenceThreshold(0.01f.nextTowards(0f))
+      .build()
+  )
+
   fun hashForAdapter(): Long {
     val repliesFromCount = post.repliesFromCount
     return (repliesFromCount.toLong() shl 32) + post.postNo() + post.postSubNo()
+  }
+
+  private val linkPattern = Regex(">>>?(/[a-z]+/)?\\d+(${
+    listOf(
+      CommentParserConstants.SAVED_REPLY_SELF_SUFFIX,
+      CommentParserConstants.SAVED_REPLY_OTHER_SUFFIX,
+      CommentParserConstants.HIDDEN_POST_SUFFIX,
+      CommentParserConstants.REMOVED_POST_SUFFIX,
+      CommentParserConstants.OP_REPLY_SUFFIX,
+      CommentParserConstants.DEAD_REPLY_SUFFIX,
+      CommentParserConstants.EXTERNAL_THREAD_LINK_SUFFIX,
+    ).map { Regex.fromLiteral(it).pattern }.joinToString("|")
+  })*")
+
+  suspend fun recalculatePostLanguages() {
+    val text = "${post.subject?.ifEmpty { null }?.let { "$it\n" } ?: ""}${
+      fullPostComment
+        .replace(linkPattern, "")
+    }"
+      .replace(Regex("\\bdesu\\b"), "tbh")
+    val identifyLanguages: Deferred<MutableList<IdentifiedLanguage>> = languageIdentifier
+      .identifyPossibleLanguages(text)
+      .asDeferred()
+
+    val languages: Map<Locale?, Float> = identifyLanguages.await()
+      .asSequence()
+      .associateBy({
+        if (it.languageTag == UNDETERMINED_LANGUAGE_TAG) null
+        else it.languageTag.let(Locale::forLanguageTag)
+      }, { it.confidence })
+    Logger.d(TAG, "identified ${languages.keys.joinToString()}")
+
+    postLanguagesPrecalculated = languages.toSortedMap(compareBy<Locale?> { -languages[it]!! })
+  }
+
+  suspend fun recalculatePostTranslations() {
+    val translations = mutableMapOf<Locale, String>()
+    val text = "${post.subject?.ifEmpty { null }?.let { "$it\n" } ?: ""}$fullPostComment"
+    val targetLanguage = TranslateLanguage.fromLanguageTag(Locale.getDefault().getLanguage())!!
+
+    for (locale in postLanguages.keys.filterNotNull().filter { it.getLanguage() != Locale.getDefault().getLanguage() }) {
+      Logger.d(TAG, "translating for ${locale.getDisplayName()}")
+      val sourceLanguage = TranslateLanguage.fromLanguageTag(locale.getLanguage());
+      if (sourceLanguage == null) continue
+      val translator = TranslatorOptions.Builder()
+        .setSourceLanguage(sourceLanguage)
+        .setTargetLanguage(targetLanguage)
+        .build()
+        .let(Translation::getClient)
+      translator.downloadModelIfNeeded().await()
+      val translation = text.split("\n")
+        .mapNotNull { if (linkPattern.matchEntire(it.trim()) != null) null else it }
+        .map { translator.translate(it).asDeferred() }
+        .awaitAll()
+      Logger.d(TAG, "translation was ${translation.joinToString("\\n")} for ${sourceLanguage}")
+      translations[locale] = translation.joinToString("\n")
+    }
+
+    postTranslationsPrecalculated = translations
   }
 
   suspend fun recalculatePostTitle() {

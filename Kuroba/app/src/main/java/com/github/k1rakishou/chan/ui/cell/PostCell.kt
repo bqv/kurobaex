@@ -7,7 +7,12 @@ import android.content.Intent
 import android.graphics.Typeface
 import android.text.Spannable
 import android.text.Spanned
+import android.text.TextPaint
+import android.text.TextUtils
+import android.text.method.LinkMovementMethod
 import android.text.style.BackgroundColorSpan
+import android.text.style.ClickableSpan
+import android.text.style.ForegroundColorSpan
 import android.util.AttributeSet
 import android.view.ActionMode
 import android.view.GestureDetector
@@ -16,8 +21,13 @@ import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.content.ContextCompat
+import androidx.core.text.buildSpannedString
+import androidx.core.text.color
+import androidx.core.text.inSpans
 import androidx.core.view.GravityCompat
 import androidx.core.widget.TextViewCompat
 import com.github.k1rakishou.chan.R
@@ -76,6 +86,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.joda.time.DateTime
 import java.lang.ref.WeakReference
+import java.util.Locale
 import javax.inject.Inject
 
 class PostCell @JvmOverloads constructor(
@@ -113,6 +124,7 @@ class PostCell @JvmOverloads constructor(
   private lateinit var title: AppCompatTextView
   private lateinit var icons: PostIcons
   private lateinit var comment: PostCommentTextView
+  private lateinit var translate: TextView
   private lateinit var replies: TextView
   private lateinit var goToPostButton: ColorizableAlternativeCardView
   private lateinit var goToPostButtonIcon: AppCompatImageView
@@ -294,6 +306,7 @@ class PostCell @JvmOverloads constructor(
       bindBackgroundColor(pcd.theme)
 
       comment.setTextColor(pcd.theme.textColorPrimary)
+      translate.setTextColor(pcd.theme.textColorSecondary)
       replies.setTextColor(pcd.theme.textColorSecondary)
       divider.setBackgroundColor(pcd.theme.dividerColor)
 
@@ -306,6 +319,7 @@ class PostCell @JvmOverloads constructor(
 
     title.invalidate()
     comment.invalidate()
+    translate.invalidate()
     replies.invalidate()
 
     goToPostButtonIcon.setImageDrawable(
@@ -392,6 +406,7 @@ class PostCell @JvmOverloads constructor(
       title = title,
       icons = icons,
       comment = comment,
+      translate = translate,
       replies = replies,
       goToPostButton = goToPostButton,
       divider = divider,
@@ -465,6 +480,7 @@ class PostCell @JvmOverloads constructor(
     imageFileName = findViewById(com.github.k1rakishou.chan.R.id.image_filename)
     icons = findViewById(com.github.k1rakishou.chan.R.id.icons)
     comment = findViewById(com.github.k1rakishou.chan.R.id.comment)
+    translate = findViewById(com.github.k1rakishou.chan.R.id.translation)
     replies = findViewById(com.github.k1rakishou.chan.R.id.replies)
     divider = findViewById(com.github.k1rakishou.chan.R.id.divider)
     postAttentionLabel = findViewById(com.github.k1rakishou.chan.R.id.post_attention_label)
@@ -479,6 +495,7 @@ class PostCell @JvmOverloads constructor(
     icons.rtl(false)
 
     comment.textSize = textSizeSp.toFloat()
+    translate.textSize = (textSizeSp - 2).toFloat()
     replies.textSize = textSizeSp.toFloat()
 
     updatePostCellFileName(postCellData)
@@ -866,6 +883,7 @@ class PostCell @JvmOverloads constructor(
     title.setAlphaFast(alpha)
     icons.setAlphaFast(alpha)
     comment.setAlphaFast(alpha)
+    translate.setAlphaFast(alpha)
     replies.setAlphaFast(alpha)
     goToPostButton.setAlphaFast(alpha)
     divider.setAlphaFast(alpha)
@@ -996,6 +1014,72 @@ class PostCell @JvmOverloads constructor(
 
     comment.setHandlesColors(theme)
     comment.setEditTextCursorColor(theme)
+
+    translate.setVisibilityFast(VISIBLE)
+    translate.linksClickable = true
+    translate.movementMethod = LinkMovementMethod.getInstance()
+
+    scope.launch {
+      postCellData.recalculatePostLanguages()
+      var postLanguages = postCellData.postLanguages.entries.mapNotNull { (key, value) ->
+        key?.run { Pair(this, (value * 100f).toInt()) }
+      }
+      fun formatLanguagesText(updateTranslation: () -> Unit = {}) = buildSpannedString {
+        var start = true
+        for ((index, locale, confidence) in postLanguages.withIndex().map {
+          (i, e) -> Triple(i, e.first, e.second)
+        }) {
+          if (start) {
+            start = false
+          } else {
+            append(", ")
+          }
+          inSpans(object : ClickableSpan() {
+            override fun onClick(widget: View) {
+              postCellData.postLanguageSelected = index
+              updateTranslation()
+            }
+            override fun updateDrawState(ds: TextPaint) {
+              ds.isUnderlineText = false
+              ds.typeface = if (postCellData.postLanguageSelected == index) Typeface.DEFAULT_BOLD else ds.typeface
+            }
+          }) {
+            append("${locale.getDisplayName()}")
+            append(" ($confidence%)")
+          }
+        }
+      }
+      translate.text = formatLanguagesText()
+
+      postCellData.recalculatePostTranslations()
+      fun updateTranslationText(): CharSequence {
+        if (postCellData.postLanguageSelected == null) {
+          for ((index, locale, confidence) in postLanguages.withIndex().map {
+            (i, e) -> Triple(i, e.first, e.second)
+          }) {
+            if (confidence < 0.2) continue
+            if (locale.getLanguage() == Locale.getDefault().getLanguage()) continue
+            if (postCellData.postTranslations[locale] == null) continue
+            postCellData.postLanguageSelected = index
+            break
+          }
+        }
+        Logger.d(TAG, "have translations for (${postCellData.postTranslations.keys.map(Locale::getDisplayLanguage).joinToString()})")
+        val languagesText = formatLanguagesText {
+          translate.text = updateTranslationText()
+        }
+        return postCellData.postLanguageSelected
+          ?.let { index -> postLanguages[index] }
+          ?.let { (locale, confidence) ->
+            Logger.d(TAG, "translating \"${comment.text.replace(Regex("\n"), "\\n")}\" for language ${locale.getDisplayName()}")
+            postCellData.postTranslations[locale]?.let { translation ->
+              Logger.d(TAG, "translation was ${translation}")
+              TextUtils.concat(languagesText, "\n\n$translation")
+            }
+          } ?: languagesText
+      }
+      translate.text = updateTranslationText()
+    }
   }
 
   private fun setPostLinkableListener(postCellData: PostCellData, bind: Boolean) {

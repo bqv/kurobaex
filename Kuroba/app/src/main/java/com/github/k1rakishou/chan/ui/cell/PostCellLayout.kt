@@ -38,6 +38,7 @@ open class PostCellLayout @JvmOverloads constructor(
   private lateinit var title: TextView
   private lateinit var icons: PostIcons
   private lateinit var comment: PostCommentTextView
+  private lateinit var translate: TextView
   private lateinit var replies: TextView
   private lateinit var goToPostButton: ColorizableAlternativeCardView
   private lateinit var divider: View
@@ -74,6 +75,7 @@ open class PostCellLayout @JvmOverloads constructor(
     title: TextView,
     icons: PostIcons,
     comment: PostCommentTextView,
+    translate: TextView,
     replies: TextView,
     goToPostButton: ColorizableAlternativeCardView,
     divider: View,
@@ -86,6 +88,7 @@ open class PostCellLayout @JvmOverloads constructor(
     this.title = title
     this.icons = icons
     this.comment = comment
+    this.translate = translate
     this.replies = replies
     this.goToPostButton = goToPostButton
     this.divider = divider
@@ -162,6 +165,7 @@ open class PostCellLayout @JvmOverloads constructor(
     this.postCommentShiftResult = null
     this.title.text = null
     this.comment.text = null
+    this.translate.text = null
     this.replies.text = null
     this.imageFileName?.text = null
     this.completelyEmptyPost = false
@@ -275,6 +279,7 @@ open class PostCellLayout @JvmOverloads constructor(
       unspecified()
     }
 
+    measureResult.addVertical(measure(translate, repliesWidthSpec, unspecified()))
     measureResult.addVertical(measure(replies, repliesWidthSpec, unspecified()))
     measureResult.addVertical(measure(divider, widthMeasureSpec, exactly(DIVIDER_HEIGHT)))
 
@@ -365,6 +370,7 @@ open class PostCellLayout @JvmOverloads constructor(
 
     // We don't need to handle completelyEmptyPost here because when completelyEmptyPost is true
     // that means post has no images so we never use post comment shift option
+    measureResult.addVertical(measure(translate, repliesWidthSpec, unspecified()))
     measureResult.addVertical(measure(replies, repliesWidthSpec, unspecified()))
     measureResult.addVertical(measure(divider, dividerWidthSpec, exactly(DIVIDER_HEIGHT)))
 
@@ -395,7 +401,7 @@ open class PostCellLayout @JvmOverloads constructor(
 
     when (shiftResult) {
       PostCommentShiftResult.CannotShiftComment -> {
-        layoutResult.vertical(comment, replies)
+        layoutResult.vertical(comment, translate, replies)
       }
       PostCommentShiftResult.ShiftAndAttachToTheSideOfThumbnail,
       is PostCommentShiftResult.ShiftWithTopMargin -> {
@@ -421,6 +427,7 @@ open class PostCellLayout @JvmOverloads constructor(
           )
         }
 
+        layoutResult.vertical(translate)
         layoutResult.vertical(replies)
       }
     }

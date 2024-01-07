@@ -67,6 +67,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         tools:text="test 2" />
 
     <TextView
+        android:id="@+id/translation"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        tools:text="English (101%), Kotlin (-1%)" />
+
+    <TextView
         android:id="@+id/replies"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

@@ -85,7 +85,7 @@ class FoolFuukaSearchRequest(
     }.build()
 
   private fun KurobaParserCommandBuilder<FoolFuukaSearchPageCollector>.parseSinglePost(): KurobaParserCommandBuilder<FoolFuukaSearchPageCollector> {
-    div(matchableBuilderFunc = { className(KurobaMatcher.PatternMatcher.stringContains("post stub stub_doc_id")) })
+    div(matchableBuilderFunc = { className(KurobaMatcher.PatternMatcher.patternFind(Pattern.compile("post .*doc_id"))) })
 
     nest {
       tag(

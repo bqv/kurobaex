@@ -1,4 +1,4 @@
-package com.github.k1rakishou.chan.features.toolbar_v2.state.default
+package com.github.k1rakishou.chan.features.toolbar_v2.state.thread
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,20 +11,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.features.toolbar_v2.MoreVerticalMenuItem
-import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarTitleWithSubtitle
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeClickableIcon
 
 @Composable
-fun KurobaDefaultToolbarContent(
+fun KurobaThreadToolbarContent(
   modifier: Modifier,
-  state: KurobaDefaultToolbarState
+  state: KurobaThreadToolbarState
 ) {
   val leftIconMut by state.leftItem
   val leftIcon = leftIconMut
-
-  val middleContentMut by state.middleContent
-  val middleContent = middleContentMut
 
   val toolbarMenuMut by state.toolbarMenu
   val toolbarMenu = toolbarMenuMut
@@ -49,22 +45,18 @@ fun KurobaDefaultToolbarContent(
       )
     }
 
-    when (middleContent) {
-      is ToolbarMiddleContent.Title -> {
-        if (middleContent.title != null) {
-          ToolbarTitleWithSubtitle(
-            modifier = Modifier
-              .weight(1f)
-              .padding(start = 12.dp),
-            title = middleContent.title,
-            subtitle = middleContent.subtitle,
-            scrollableTitle = false
-          )
-        }
-      }
-      null -> {
-        // no-op
-      }
+    val titleMut by state.title
+    val title = titleMut
+
+    if (title != null) {
+      ToolbarTitleWithSubtitle(
+        modifier = Modifier
+          .weight(1f)
+          .padding(start = 12.dp),
+        title = title,
+        subtitle = null,
+        scrollableTitle = false
+      )
     }
 
     if (toolbarMenu != null) {
@@ -97,10 +89,7 @@ fun KurobaDefaultToolbarContent(
 
       val overflowMenuItems = toolbarMenu.overflowMenuItems
       if (overflowMenuItems.isNotEmpty()) {
-        val overflowIcon = remember {
-          MoreVerticalMenuItem(onClick = { /**no-op*/ })
-        }
-
+        val overflowIcon = remember { MoreVerticalMenuItem(onClick = { }) }
         val drawableId by overflowIcon.drawableIdState
 
         Spacer(modifier = Modifier.width(12.dp))

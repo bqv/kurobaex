@@ -1,4 +1,4 @@
-package com.github.k1rakishou.chan.features.toolbar_v2.state.default
+package com.github.k1rakishou.chan.features.toolbar_v2.state.catalog
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,25 +9,40 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.features.toolbar_v2.MoreVerticalMenuItem
-import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarTitleWithSubtitle
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeClickableIcon
+import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
+import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 
 @Composable
-fun KurobaDefaultToolbarContent(
+fun KurobaCatalogToolbarContent(
   modifier: Modifier,
-  state: KurobaDefaultToolbarState
+  state: KurobaCatalogToolbarState
 ) {
   val leftIconMut by state.leftItem
   val leftIcon = leftIconMut
 
-  val middleContentMut by state.middleContent
-  val middleContent = middleContentMut
-
   val toolbarMenuMut by state.toolbarMenu
   val toolbarMenu = toolbarMenuMut
+
+  val titleMut by state.title
+  val title = titleMut
+
+  val subtitle by state.subtitle
+  val scrollableTitle by state.scrollableTitle
+
+  val chanTheme = LocalChanTheme.current
+  val textColor = chanTheme.onToolbarBackgroundComposeColor
+
+  val path = remember { Path() }
 
   Row(
     modifier = modifier,
@@ -49,22 +64,21 @@ fun KurobaDefaultToolbarContent(
       )
     }
 
-    when (middleContent) {
-      is ToolbarMiddleContent.Title -> {
-        if (middleContent.title != null) {
-          ToolbarTitleWithSubtitle(
-            modifier = Modifier
-              .weight(1f)
-              .padding(start = 12.dp),
-            title = middleContent.title,
-            subtitle = middleContent.subtitle,
-            scrollableTitle = false
+    if (title != null) {
+      ToolbarTitleWithSubtitle(
+        modifier = Modifier
+          .weight(1f)
+          .kurobaClickable(
+            bounded = true,
+            enabled = true,
+            onClick = { state.onMainContentClick?.invoke() }
           )
-        }
-      }
-      null -> {
-        // no-op
-      }
+          .drawBehind { drawTriangle(path, textColor) }
+          .padding(start = 12.dp, end = 28.dp),
+        title = title,
+        subtitle = subtitle,
+        scrollableTitle = scrollableTitle
+      )
     }
 
     if (toolbarMenu != null) {
@@ -97,10 +111,7 @@ fun KurobaDefaultToolbarContent(
 
       val overflowMenuItems = toolbarMenu.overflowMenuItems
       if (overflowMenuItems.isNotEmpty()) {
-        val overflowIcon = remember {
-          MoreVerticalMenuItem(onClick = { /**no-op*/ })
-        }
-
+        val overflowIcon = remember { MoreVerticalMenuItem(onClick = { }) }
         val drawableId by overflowIcon.drawableIdState
 
         Spacer(modifier = Modifier.width(12.dp))
@@ -118,6 +129,32 @@ fun KurobaDefaultToolbarContent(
       }
 
       Spacer(modifier = Modifier.width(12.dp))
+    }
+  }
+}
+
+private fun DrawScope.drawTriangle(
+  path: Path,
+  textColor: Color
+) {
+  val width = with(density) { 10.dp.toPx() }
+  val height = with(density) { 6.dp.toPx() }
+
+  val leftOffset = with(density) { 8.dp.toPx() }
+  val topOffset = (size.height - height) / 2f
+
+  translate(left = -leftOffset, top = -topOffset) {
+    rotate(degrees = 180f) {
+      path.rewind()
+
+      with(path) {
+        moveTo(x = width / 2, y = 0f)
+        lineTo(x = width, y = height)
+        lineTo(x = 0f, y = height)
+        close()
+      }
+
+      drawPath(path = path, color = textColor)
     }
   }
 }

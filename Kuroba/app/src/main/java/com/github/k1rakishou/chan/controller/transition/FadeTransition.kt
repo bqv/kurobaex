@@ -4,24 +4,32 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.view.View
-import android.view.animation.AccelerateInterpolator
+import android.view.animation.AccelerateDecelerateInterpolator
 
-class PopControllerTransition : ControllerTransition(TransitionMode.Out) {
+class FadeTransition(
+  transitionMode: TransitionMode,
+) : ControllerTransition(transitionMode) {
 
   override fun perform() {
     animatorSet.end()
 
-    val fromY = ObjectAnimator.ofFloat(from!!.view, View.TRANSLATION_Y, 0f, from!!.view.height * 0.05f)
-    fromY.interpolator = AccelerateInterpolator(2.5f)
-    fromY.duration = 250
+    val toAlpha = when (transitionMode) {
+      TransitionMode.In -> {
+        ObjectAnimator.ofFloat(to!!.view, View.ALPHA, 0f, 1f)
+      }
+      TransitionMode.Out -> {
+        ObjectAnimator.ofFloat(from!!.view, View.ALPHA, from!!.view.alpha, 0f)
+      }
+    }
 
-    val fromAlpha = ObjectAnimator.ofFloat(from!!.view, View.ALPHA, from!!.view.alpha, 0f)
-    fromAlpha.interpolator = AccelerateInterpolator(2f)
-    fromAlpha.startDelay = 100
-    fromAlpha.duration = 150
+    toAlpha.duration = 200
+    toAlpha.interpolator = AccelerateDecelerateInterpolator()
 
-    val progress = ObjectAnimator.ofFloat(from!!.view.alpha, 0f)
-    progress.interpolator = AccelerateInterpolator(2f)
+    val progress = when (transitionMode) {
+      TransitionMode.In -> ObjectAnimator.ofFloat(0f, 1f)
+      TransitionMode.Out -> ObjectAnimator.ofFloat(from!!.view.alpha, 0f)
+    }
+    progress.interpolator = AccelerateDecelerateInterpolator()
     progress.duration = 250
     progress.addUpdateListener { animator ->
       onProgress(animator.animatedValue as Float)
@@ -43,8 +51,7 @@ class PopControllerTransition : ControllerTransition(TransitionMode.Out) {
       }
     )
 
-    animatorSet.playTogether(fromY, fromAlpha, progress)
+    animatorSet.playTogether(toAlpha, progress)
     animatorSet.start()
   }
-
 }

@@ -2,7 +2,8 @@ package com.github.k1rakishou.chan.ui.view.insets
 
 import android.content.Context
 import android.util.AttributeSet
-import com.airbnb.epoxy.EpoxyRecyclerView
+import android.view.View
+import android.widget.LinearLayout
 import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
@@ -16,10 +17,10 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class InsetAwareEpoxyRecyclerView @JvmOverloads constructor(
+class InsetAwareLinearLayout @JvmOverloads constructor(
   context: Context,
   attributeSet: AttributeSet? = null
-) : EpoxyRecyclerView(context, attributeSet), WindowInsetsListener {
+) : LinearLayout(context, attributeSet), WindowInsetsListener {
 
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
@@ -33,6 +34,8 @@ class InsetAwareEpoxyRecyclerView @JvmOverloads constructor(
   init {
     AppModuleAndroidUtils.extractActivityComponent(context)
       .inject(this)
+
+    orientation = LinearLayout.VERTICAL
   }
 
   override fun onAttachedToWindow() {
@@ -56,6 +59,20 @@ class InsetAwareEpoxyRecyclerView @JvmOverloads constructor(
     coroutineScope.cancelChildren()
   }
 
+  override fun onFinishInflate() {
+    super.onFinishInflate()
+
+    onInsetsChanged()
+  }
+
+  override fun onViewAdded(child: View?) {
+    onInsetsChanged()
+  }
+
+  override fun onViewRemoved(child: View?) {
+    onInsetsChanged()
+  }
+
   override fun onInsetsChanged() {
     val bottomPadding = with(appResources.composeDensity) {
       maxOf(
@@ -72,9 +89,10 @@ class InsetAwareEpoxyRecyclerView @JvmOverloads constructor(
     }
 
     updatePaddings(
+      left = globalWindowInsetsManager.left(),
+      right = globalWindowInsetsManager.right(),
       top = topPadding,
       bottom = bottomPadding
     )
   }
-
 }

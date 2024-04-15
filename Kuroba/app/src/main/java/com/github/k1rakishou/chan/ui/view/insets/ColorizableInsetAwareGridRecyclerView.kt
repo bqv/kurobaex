@@ -5,25 +5,26 @@ import android.util.AttributeSet
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.recyclerview.widget.RecyclerView
 import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.helper.AppResources
+import com.github.k1rakishou.chan.ui.theme.widget.ColorizableGridRecyclerView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.common.updatePaddings
+import com.github.k1rakishou.core_themes.IColorizableWidget
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class InsetAwareRecyclerView @JvmOverloads constructor(
+class ColorizableInsetAwareGridRecyclerView @JvmOverloads constructor(
   context: Context,
-  attributeSet: AttributeSet? = null,
+  attrs: AttributeSet? = null,
   defStyleAttr: Int = androidx.recyclerview.R.attr.recyclerViewStyle
-) : RecyclerView(context, attributeSet, defStyleAttr), WindowInsetsListener {
+) : ColorizableGridRecyclerView(context, attrs, defStyleAttr), IColorizableWidget, WindowInsetsListener {
 
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager

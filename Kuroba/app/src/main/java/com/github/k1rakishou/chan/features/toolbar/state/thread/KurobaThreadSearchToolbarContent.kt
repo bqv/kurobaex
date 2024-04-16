@@ -1,4 +1,4 @@
-package com.github.k1rakishou.chan.features.toolbar.state.search
+package com.github.k1rakishou.chan.features.toolbar.state.thread
 
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
@@ -29,10 +29,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun KurobaSearchToolbarContent(
+fun KurobaThreadSearchToolbarContent(
   modifier: Modifier,
   chanTheme: ChanTheme,
-  state: KurobaSearchToolbarSubState,
+  state: KurobaThreadSearchToolbarSubState,
   onCloseSearchToolbarButtonClicked: () -> Unit
 ) {
   val focusRequester = remember { FocusRequester() }

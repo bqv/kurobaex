@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.github.k1rakishou.chan.core.site.sites;
+package com.github.k1rakishou.chan.core.site.sites.soyjakparty;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -40,17 +40,17 @@ import java.util.Map;
 import okhttp3.HttpUrl;
 
 @DoNotStrip
-public class Chan370
+public class SoyjakParty
         extends CommonSite {
     private final ChunkDownloaderSiteProperties chunkDownloaderSiteProperties;
-    public static final String SITE_NAME = "370chan";
+    public static final String SITE_NAME = "Soyjak.party";
 
     public static final CommonSiteUrlHandler URL_HANDLER = new CommonSiteUrlHandler() {
-        private static final String ROOT = "https://370ch.lt/";
+        private static final String ROOT = "https://soyjak.party/";
 
         @Override
         public Class<? extends Site> getSiteClass() {
-            return Chan370.class;
+            return SoyjakParty.class;
         }
 
         @Override
@@ -65,7 +65,7 @@ public class Chan370
 
         @Override
         public String[] getNames() {
-            return new String[]{"370chan"};
+            return new String[]{"Soyjak.party"};
         }
 
         @Override
@@ -77,7 +77,7 @@ public class Chan370
             } else if (chanDescriptor instanceof ChanDescriptor.ThreadDescriptor) {
                 return getUrl().newBuilder()
                         .addPathSegment(chanDescriptor.boardCode())
-                        .addPathSegment("res")
+                        .addPathSegment("thread")
                         .addPathSegment(((ChanDescriptor.ThreadDescriptor) chanDescriptor).getThreadNo() + ".html")
                         .toString();
             } else {
@@ -86,7 +86,7 @@ public class Chan370
         }
     };
 
-    public Chan370() {
+    public SoyjakParty() {
         chunkDownloaderSiteProperties = new ChunkDownloaderSiteProperties(true, true);
     }
 
@@ -94,17 +94,24 @@ public class Chan370
     public void setup() {
         setEnabled(true);
         setName(SITE_NAME);
-        setIcon(SiteIcon.fromFavicon(getImageLoaderV2(), HttpUrl.parse("https://370ch.lt/favicon.ico")));
+        setIcon(SiteIcon.fromFavicon(getImageLoaderV2(), HttpUrl.parse("https://soyjak.party/favicon.ico")));
 
         setBoards(
-                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "a"), "anime ir manga"),
-                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "b"), "apie viską"),
-                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "g"), "technologijos ir žaidimai"),
-                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "fo"), "fotografija"),
-                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "mu"), "muzika"),
-                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "int"), "internacionalus"),
-                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "t"), "teptukas"),
-                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "meta"), "svetainės aptarimas")
+                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "q"), "the 'party"),
+                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "soy"), "soyjaks"),
+                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "jak"), "jaks"),
+                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "qa"), "question & answer"),
+                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "r"), "requests and soy art"),
+                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "caca"), "cacaborea"),
+                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "a"), "tranime"),
+                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "raid"), "raid: shadow legends"),
+                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "int"), "international"),
+                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "mtv"), "music, television, video games"),
+                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "pol"), "international politics"),
+                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "sci"), "soyence and technology"),
+                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "craft"), "minecraft"),
+                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "fnac"), "five nights at cobson's"),
+                ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "nate"), "coals")
         );
 
         setResolvable(URL_HANDLER);
@@ -116,22 +123,27 @@ public class Chan370
             }
         });
 
-        setEndpoints(new VichanEndpoints(this, "https://370ch.lt/", "https://370ch.lt/")
+        setEndpoints(new VichanEndpoints(this, "https://soyjak.party/", "https://soyjak.party/")
         {
             @Override
             public HttpUrl thumbnailUrl(BoardDescriptor boardDescriptor, boolean spoiler, int customSpoilers, Map<String, String> arg) {
                 String extension = switch (arg.get("ext")){
-                    // for an unknown reason, not all media files follow the same rules
-                    // i.e. some jpg images have png thumbnails, others have jpg
-                    // this makes some amount of media files have 404 thumbnails
-                    case "jpg", "jpeg" -> "." + arg.get("ext");
-                    case "webm", "mp4", "gif" -> ".gif";
+                    case "jpg", "jpeg", "gif", "webp" -> "." + arg.get("ext");
+                    case "webm", "mp4" -> ".jpg";
                     default -> ".png";
                 };
                 return root.builder()
                         .s(boardDescriptor.getBoardCode())
                         .s("thumb")
                         .s(arg.get("tim") + extension)
+                        .url();
+            }
+            @Override
+            public HttpUrl thread(ChanDescriptor.ThreadDescriptor threadDescriptor) {
+                return root.builder()
+                        .s(threadDescriptor.boardCode())
+                        .s("thread")
+                        .s(threadDescriptor.getThreadNo() + ".json")
                         .url();
             }
         });

@@ -43,6 +43,7 @@ import com.github.k1rakishou.chan.core.site.sites.lynxchan.Endchan
 import com.github.k1rakishou.chan.core.site.sites.lynxchan.Kohlchan
 import com.github.k1rakishou.chan.core.site.sites.lynxchan.YesHoney
 import com.github.k1rakishou.chan.core.site.sites.soyjakparty.SoyjakParty
+import com.github.k1rakishou.chan.core.site.sites.Vhschan
 import com.github.k1rakishou.model.data.descriptor.SiteDescriptor
 
 /**

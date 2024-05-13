@@ -6,10 +6,12 @@ import android.content.Context
 import android.os.Build
 import android.util.AttributeSet
 import android.view.KeyEvent
+import android.view.MenuItem
 import android.view.View
 import android.webkit.MimeTypeMap
 import android.widget.CheckBox
 import android.widget.LinearLayout
+import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.github.k1rakishou.ChanSettings
@@ -386,8 +388,30 @@ class ThreadLayout @JvmOverloads constructor(
 
   private fun openReplyInternal(openReplyLayout: Boolean): Boolean {
     if (openReplyLayout && !canOpenReplyLayout()) {
-      if (presenter.currentChanDescriptor is ChanDescriptor.CompositeCatalogDescriptor) {
-        showToast(context, R.string.post_posting_is_not_supported_composite_catalog)
+      val chanDescriptor = presenter.currentChanDescriptor
+      if (chanDescriptor is ChanDescriptor.CompositeCatalogDescriptor) {
+        val menu = PopupMenu(context, replyButton)
+        menu.setOnMenuItemClickListener { item: MenuItem ->
+          val selectedCatalogDescriptor = chanDescriptor.catalogDescriptors.find { it.userReadableString() == item.title }
+          if (selectedCatalogDescriptor != null) {
+            coroutineScope.launch {
+              threadListLayout.setReplyLayoutChanDescriptor(selectedCatalogDescriptor)
+              if (openReplyLayout) {
+                threadListLayout.openReplyLayout()
+              } else {
+                threadListLayout.closeReplyLayout()
+              }
+              showToast(context, "Posting to " + selectedCatalogDescriptor.userReadableString())
+            }
+            true
+          } else {
+            false
+          }
+        }
+        for (catalogDescriptor in chanDescriptor.catalogDescriptors) {
+          menu.getMenu().add(catalogDescriptor.userReadableString())
+        }
+        menu.show()
       } else {
         showToast(context, R.string.post_posting_is_not_supported)
       }
@@ -404,8 +428,8 @@ class ThreadLayout @JvmOverloads constructor(
     return true
   }
 
-  private fun canOpenReplyLayout(): Boolean {
-    val chanDescriptor = presenter.currentChanDescriptor
+  private fun ChanDescriptor?.canOpenReplyLayout(): Boolean {
+    val chanDescriptor = this
 
     if (chanDescriptor is ChanDescriptor.CompositeCatalogDescriptor) {
       return false
@@ -421,6 +445,9 @@ class ThreadLayout @JvmOverloads constructor(
 
     return true
   }
+
+  private fun canOpenReplyLayout(): Boolean =
+    presenter.currentChanDescriptor.canOpenReplyLayout()
 
   fun onPickLocalMediaButtonClicked() {
     threadListLayout.onPickLocalMediaButtonClicked()

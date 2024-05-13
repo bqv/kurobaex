@@ -755,6 +755,10 @@ class ThreadListLayout @JvmOverloads constructor(
     }
   }
 
+  suspend fun setReplyLayoutChanDescriptor(chanDescriptor: ChanDescriptor) {
+    replyLayoutView.bindChanDescriptor(chanDescriptor, requireThreadControllerType())
+  }
+
   fun isReplyLayoutOpened(): Boolean {
     return replyLayoutView.isOpened()
   }
